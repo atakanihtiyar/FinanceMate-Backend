@@ -1,17 +1,15 @@
 import express from 'express'
 import cors from 'cors'
+import { connectToAtlas } from './db/connection'
 
-const PORT = process.env.PORT || 5050
 const app = express()
+const PORT = process.env.PORT || 5050
 
 app.use(cors())
 app.use(express.json())
+connectToAtlas()
 
 try {
-	app.get('/', (req, res) => {
-		res.send('Hello World!')
-	})
-
 	app.listen(PORT, () => {
 		return console.log(`Server listening at http://localhost:${PORT}`)
 	})
