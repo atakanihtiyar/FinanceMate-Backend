@@ -2,8 +2,18 @@ import { Schema, model } from "mongoose"
 import passportLocalMongoose from "passport-local-mongoose"
 
 const userSchema = new Schema({
+    is_admin: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
+    is_active: {
+        type: Boolean,
+        required: true,
+        default: true
+    },
     account_number: {
-        type: Number,
+        type: String,
         required: true,
         unique: true
     },
@@ -24,6 +34,7 @@ const userSchema = new Schema({
     phone_number: {
         type: String,
         required: true,
+        unique: true,
         match: /^\+[0-9]{1,3}[0-9]{11}$/
     },
     email_address: {
@@ -31,10 +42,6 @@ const userSchema = new Schema({
         required: true,
         match: /^[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+$/,
         unique: true
-    },
-    password: {
-        type: String,
-        required: true,
     },
     created_at: {
         type: Date,
@@ -50,6 +57,6 @@ const userSchema = new Schema({
     }
 })
 
-userSchema.plugin(passportLocalMongoose)
+userSchema.plugin(passportLocalMongoose, { usernameField: "email_address" })
 const User = model("User", userSchema)
 export default User
