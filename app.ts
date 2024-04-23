@@ -1,13 +1,52 @@
 import express from 'express'
 import cors from 'cors'
 import { connectToAtlas } from './db/connection'
+import passport from 'passport'
+import { Strategy as LocalStrategy } from 'passport-local'
+import User from './db/models/User'
+import cookieParser from 'cookie-parser'
+import session, { SessionOptions } from 'express-session'
+
 import userRoutes from './routers/userRoutes'
+
+connectToAtlas()
+
+// #region EXPRESS MIDDLEWARES
+
 const app = express()
 const PORT = process.env.PORT || 5050
+const sessionSecret = process.env.SESSION_SECRET || "itookmypills"
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173"
 
-app.use(cors())
+app.use(cors({ origin: frontendUrl, credentials: true }))
 app.use(express.json())
-connectToAtlas()
+
+const sessionOptions: SessionOptions = {
+	secret: sessionSecret,
+	resave: false,
+	saveUninitialized: true,
+	cookie: {
+		httpOnly: true,
+		sameSite: "none",
+		expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+		maxAge: 1000 * 60 * 60 * 24 * 7
+	}
+}
+app.use(session(sessionOptions))
+app.use(cookieParser())
+
+// #endregion
+
+// #region PASSPORT MIDDLEWARES
+
+app.use(passport.initialize())
+app.use(passport.session())
+passport.use(new LocalStrategy(User.authenticate()))
+
+passport.serializeUser(User.serializeUser())
+passport.deserializeUser(User.deserializeUser())
+
+// #endregion
 
 try {
 	app.use("/users", userRoutes)
