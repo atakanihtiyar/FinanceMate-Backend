@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser'
 import session, { SessionOptions } from 'express-session'
 
 import userRoutes from './routers/userRoutes'
+import sessionRoutes from './routers/sessionRoutes'
 
 connectToAtlas()
 
@@ -28,8 +29,7 @@ const sessionOptions: SessionOptions = {
 	cookie: {
 		httpOnly: true,
 		sameSite: "none",
-		expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-		maxAge: 1000 * 60 * 60 * 24 * 7
+		expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7)
 	}
 }
 app.use(session(sessionOptions))
@@ -41,7 +41,7 @@ app.use(cookieParser())
 
 app.use(passport.initialize())
 app.use(passport.session())
-passport.use(new LocalStrategy(User.authenticate()))
+passport.use(User.createStrategy())
 
 passport.serializeUser(User.serializeUser())
 passport.deserializeUser(User.deserializeUser())
@@ -50,6 +50,7 @@ passport.deserializeUser(User.deserializeUser())
 
 try {
 	app.use("/users", userRoutes)
+	app.use("/session", sessionRoutes)
 
 	app.listen(PORT, () => {
 		return console.log(`Server listening at http://localhost:${PORT}`)
