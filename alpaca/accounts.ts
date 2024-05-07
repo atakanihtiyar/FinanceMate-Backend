@@ -268,3 +268,38 @@ export const updateFakeAlpacaUser = async (userData: UserData) => {
         }
     }
 }
+
+export const closeAlpacaUser = async (account_id: string) => {
+    const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}/actions/close`, {
+        method: "POST",
+        headers: {
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        }
+    })
+    if (alpacaRes.status === 200) return true
+    else return false
+}
+
+export const closeFakeAlpacaUser = async () => {
+    return true
+}
+
+export const reopenAlpacaUser = async (account_id: string) => {
+    const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}/actions/reopen`, {
+        method: "POST",
+        headers: {
+            accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        }
+    })
+    const alpacaData = await alpacaRes.json()
+    console.log(alpacaRes.status)
+    console.dir(alpacaData)
+    if (alpacaRes.status === 200) return true
+    else return false
+}
+
+export const reopenFakeAlpacaUser = async () => {
+    return true
+}

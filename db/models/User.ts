@@ -7,10 +7,12 @@ const userSchema = new Schema({
         required: true,
         default: false
     },
-    is_active: {
-        type: Boolean,
-        required: true,
-        default: true
+    status: {
+        type: String,
+        enum: ["INACTIVE", "ONBOARDING", "SUBMITTED", "SUBMISSION_FAILED",
+            "ACTION_REQUIRED", "ACCOUNT_UPDATED", "APPROVAL_PENDING",
+            "APPROVED", "REJECTED", "ACTIVE", "ACCOUNT_CLOSED"],
+        require: true
     },
     account_number: {
         type: String,

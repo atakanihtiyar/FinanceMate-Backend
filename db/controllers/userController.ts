@@ -1,10 +1,9 @@
-import { createAlpacaUser, updateAlpacaUser } from "../../alpaca/accounts";
+import { closeAlpacaUser, closeFakeAlpacaUser, createAlpacaUser, reopenAlpacaUser, reopenFakeAlpacaUser, updateAlpacaUser } from "../../alpaca/accounts";
 import User from "../models/User";
 import { Request, Response } from "express";
 export interface IRequestWithUser extends Request {
     user?: {
         account_number: string,
-        is_active: boolean,
         is_admin: boolean
     }
 }
@@ -69,7 +68,9 @@ export async function createUser(req: IRequestWithUser, res: Response) {
             })
         })
         if (status !== 200) throw new Error(status + ": " + data)
+
         user.alpaca.alpaca_id = data.id
+        user.status = data.status
         user.account_number = data.account_number
         user.ip_address = ip_address
         user.alpaca = {
@@ -121,8 +122,7 @@ export async function getUser(req: IRequestWithUser, res: Response) {
             throw new Error("You are unauthorized for this action")
 
         const foundUser = await User.findOne({ account_number: account_number })
-        if (!foundUser)
-            throw new Error("User not found")
+        if (!foundUser) throw new Error("User not found")
 
         return res.status(200).json({ message: "User info fetched", account_number: foundUser.account_number, name: foundUser.given_name, foundUser })
     }
@@ -140,14 +140,10 @@ export async function updateUser(req: IRequestWithUser, res: Response) {
         const account_number = req.params.account_number
         const requester = req.user
 
-        if (!requester || (requester.account_number !== account_number && !requester.is_admin))
-            throw new Error("You are unauthorized for this action")
-
+        if (!requester || (requester.account_number !== account_number && !requester.is_admin)) throw new Error("You are unauthorized for this action")
         const foundUser = await User.findOne({ account_number: account_number })
-        if (!foundUser)
-            throw new Error("User couldn't found")
-        if (!foundUser.is_active)
-            throw new Error("User is not active")
+        if (!foundUser) throw new Error("User couldn't found")
+        if (foundUser.status !== "ACTIVE") throw new Error("User is not active")
 
         // MONGO VALIDATION
         foundUser.family_name = identity.family_name
@@ -184,8 +180,7 @@ export async function updateUser(req: IRequestWithUser, res: Response) {
         foundUser.alpaca = { ...data }
 
         const updatedUser = await foundUser.save()
-        if (!updatedUser)
-            throw new Error("Account couldn't update")
+        if (!updatedUser) throw new Error("Account couldn't update")
 
         return res.status(200).send({ message: "User updated" })
     }
@@ -197,23 +192,20 @@ export async function updateUser(req: IRequestWithUser, res: Response) {
 // should be update for alpaca
 export async function closeUser(req: IRequestWithUser, res: Response) {
     try {
-        const account_number_to = req.params.account_number
-        const user_from = req.user
-        if (!user_from || (user_from.account_number !== account_number_to && !user_from.is_admin))
-            throw new Error("You are unauthorized for this action")
+        const account_number = req.params.account_number
+        const requester = req.user
+        if (!requester || (requester.account_number !== account_number && !requester.is_admin)) throw new Error("You are unauthorized for this action")
+        const foundUser = await User.findOne({ account_number: account_number })
+        if (!foundUser) throw new Error("User not found")
+        if (foundUser.status === "ACCOUNT_CLOSED") throw new Error("This account is already closed")
 
-        const foundUser = await User.findOne({ account_number: account_number_to })
-        if (!foundUser)
-            throw new Error("User not found")
+        const accountClosed = closeAlpacaUser(foundUser.alpaca.alpaca_id)
+        if (!accountClosed) throw new Error("alpaca error: user couldn't closed on alpaca")
 
-        if (!foundUser.is_active)
-            throw new Error("This account is already closed")
-
-        foundUser.is_active = false
+        foundUser.status = "ACCOUNT_CLOSED"
+        foundUser.alpaca.status = "ACCOUNT_CLOSED"
         const closedUser = await foundUser.save()
-        if (!closedUser)
-            throw new Error("Account couldn't close")
-
+        if (!closedUser) throw new Error("mongo error: user couldn't close on db")
         return res.status(200).json({ message: "User closed" })
     }
     catch (err) {
@@ -224,23 +216,20 @@ export async function closeUser(req: IRequestWithUser, res: Response) {
 // should be update for alpaca
 export async function reopenUser(req: IRequestWithUser, res: Response) {
     try {
-        const account_number_to = req.params.account_number
-        const user_from = req.user
-        if (!user_from || !user_from.is_admin)
-            throw new Error("You are unauthorized for this action")
+        const account_number = req.params.account_number
+        const requester = req.user
+        if (!requester || !requester.is_admin) throw new Error("You are unauthorized for this action")
+        const foundUser = await User.findOne({ account_number: account_number })
+        if (!foundUser) throw new Error("User not found")
+        if (foundUser.status === "ACTIVE") throw new Error("This account is already open")
 
-        const foundUser = await User.findOne({ account_number: account_number_to })
-        if (!foundUser)
-            throw new Error("User not found")
+        const accountReopened = reopenAlpacaUser(foundUser.alpaca.alpaca_id)
+        if (!accountReopened) throw new Error("alpaca error: user couldn't closed on alpaca")
 
-        if (foundUser.is_active)
-            throw new Error("This account is already open")
-
-        foundUser.is_active = true
+        foundUser.status = "ACTIVE"
+        foundUser.alpaca.status = "ACTIVE"
         const reopenedUser = await foundUser.save()
-        if (!reopenedUser)
-            throw new Error("Account couldn't reopen")
-
+        if (!reopenedUser) throw new Error("mongo error: user couldn't reopen")
         return res.status(200).json({ message: "User reopened" })
     }
     catch (err) {
