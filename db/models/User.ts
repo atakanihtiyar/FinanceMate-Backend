@@ -7,17 +7,21 @@ const userSchema = new Schema({
         required: true,
         default: false
     },
-    status: {
+    alpaca_id: {
         type: String,
-        enum: ["INACTIVE", "ONBOARDING", "SUBMITTED", "SUBMISSION_FAILED",
-            "ACTION_REQUIRED", "ACCOUNT_UPDATED", "APPROVAL_PENDING",
-            "APPROVED", "REJECTED", "ACTIVE", "ACCOUNT_CLOSED"],
         require: true
     },
     account_number: {
         type: String,
         required: true,
         unique: true
+    },
+    status: {
+        type: String,
+        enum: ["INACTIVE", "ONBOARDING", "SUBMITTED", "SUBMISSION_FAILED",
+            "ACTION_REQUIRED", "ACCOUNT_UPDATED", "APPROVAL_PENDING",
+            "APPROVED", "REJECTED", "ACTIVE", "ACCOUNT_CLOSED"],
+        require: true
     },
     given_name: {
         type: String,
@@ -96,25 +100,10 @@ const userSchema = new Schema({
         require: true
     },
     alpaca: {
-        alpaca_id: {
-            type: String,
-            require: true
-        },
-        account_number: {
-            type: String || null,
-            require: true
-        },
         account_type: {
             type: String,
             enum: ["trading", "custodial", "donor_advised"],
             require: false
-        },
-        status: {
-            type: String,
-            enum: ["INACTIVE", "ONBOARDING", "SUBMITTED", "SUBMISSION_FAILED",
-                "ACTION_REQUIRED", "ACCOUNT_UPDATED", "APPROVAL_PENDING",
-                "APPROVED", "REJECTED", "ACTIVE", "ACCOUNT_CLOSED"],
-            require: true
         },
         crypto_status: {
             type: String,
@@ -159,16 +148,6 @@ const userSchema = new Schema({
             require: false
         },
         contact: {
-            email_address: {
-                type: String,
-                require: true,
-                match: /^[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+$/
-            },
-            phone_number: {
-                type: String,
-                require: true,
-                match: /^\+[0-9]{1,3}[0-9]{11}$/
-            },
             street_address: {
                 type: [String],
                 require: true,
@@ -289,36 +268,10 @@ const userSchema = new Schema({
             },
         },
         identity: {
-            given_name: {
-                type: String,
-                required: true,
-                minLength: 3,
-                maxLength: 20
-            },
-            family_name: {
-                type: String,
-                required: true,
-                minLength: 3,
-                maxLength: 20
-            },
             date_of_birth: {
                 type: String,
                 required: true,
                 match: /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/
-            },
-            tax_id: {
-                type: String,
-                required: false
-            },
-            tax_id_type: {
-                type: String,
-                enum: ["USA_SSN", "OTHER_GOV_ID"],
-                required: true
-            },
-            country_of_tax_residence: {
-                type: String,
-                enum: ["USA", "TUR"],
-                required: true
             },
             funding_source: {
                 type: [String],

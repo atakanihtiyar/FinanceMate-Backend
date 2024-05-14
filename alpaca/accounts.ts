@@ -2,7 +2,6 @@ const alpacaUrl = process.env.ALPACA_API_URL || "alpaca_api_url_not_found"
 const alpacaKey = process.env.ALPACA_API_KEY || "alpaca_api_key_not_found"
 const alpacaSecret = process.env.ALPACA_API_SECRET || "alpaca_api_secret_not_found"
 
-
 interface UserData {
     identity: {
         given_name: string,
@@ -35,7 +34,117 @@ interface UserData {
     }[]
 }
 
-export const createAlpacaUser = async (userData) => {
+interface Options {
+    returnFake?: boolean
+}
+
+const extractAlpacaUser = (alpacaUser) => {
+    const user: any = {
+        status: alpacaUser.status,
+        alpaca_id: alpacaUser.id,
+        account_number: alpacaUser.account_number,
+        given_name: alpacaUser.identity.given_name,
+        family_name: alpacaUser.identity.family_name,
+        email_address: alpacaUser.contact.email_address,
+        tax_id: alpacaUser.identity.tax_id,
+        tax_id_type: alpacaUser.identity.tax_id_type,
+        country_of_tax_residence: alpacaUser.identity.country_of_tax_residence,
+        phone_number: alpacaUser.contact.phone_number
+    }
+    delete alpacaUser.status
+    delete alpacaUser.id
+    delete alpacaUser.account_number
+    delete alpacaUser.identity.given_name
+    delete alpacaUser.identity.family_name
+    delete alpacaUser.contact.email_address
+    delete alpacaUser.identity.tax_id
+    delete alpacaUser.identity.tax_id_type
+    delete alpacaUser.identity.country_of_tax_residence
+    delete alpacaUser.contact.phone_number
+    user.alpaca = {
+        ...alpacaUser
+    }
+
+    return user
+}
+
+export const createAlpacaUser = async (userData: UserData, opt?: Options) => {
+    if (opt?.returnFake) return {
+        status: 200,
+        data: extractAlpacaUser({
+            "id": userData.identity.tax_id,
+            "account_number": userData.identity.tax_id,
+            "account_type": "trading",
+            "status": "ACTIVE",
+            "crypto_status": "ACTIVE",
+            "currency": "USD",
+            "created_at": "2024-05-07T08:07:14.464Z",
+            "last_equity": "string",
+            "enabled_assets": [
+                "us_equity"
+            ],
+            "contact": {
+                "email_address": "john.doe@example.com",
+                "phone_number": "+15556667788",
+                "street_address": [
+                    "20 N San Mateo Dr"
+                ],
+                "unit": "string",
+                "city": "San Mateo",
+                "state": "CA",
+                "postal_code": "94401",
+                ...(userData && userData.contact)
+            },
+            "identity": {
+                "given_name": "John",
+                "family_name": "Doe",
+                "date_of_birth": "1990-01-01",
+                "tax_id": "666-55-4321",
+                "tax_id_type": "USA_SSN",
+                "country_of_citizenship": "AUS",
+                "country_of_birth": "AUS",
+                "country_of_tax_residence": "USA",
+                "funding_source": [
+                    "employment_income"
+                ],
+                ...(userData && userData.identity)
+            },
+            "disclosures": {
+                "is_control_person": false,
+                "is_affiliated_exchange_or_finra": false,
+                "is_politically_exposed": false,
+                "immediate_family_exposed": false,
+                ...(userData && userData.disclosures)
+            },
+            "documents": [
+                [
+                    {
+                        "document_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                        "document_type": "identity_verification",
+                        "created_at": "2024-05-07T08:07:14.464Z",
+                        "mime_type": "string",
+                        "content": "string",
+                        "document_sub_type": "string"
+                    }
+                ]
+            ],
+            "agreements": [
+                {
+                    "agreement": "customer_agreement",
+                    "signed_at": "2019-09-11T18:09:33Z",
+                    "ip_address": "185.13.21.99",
+                    "revision": "string",
+                    ...(userData && userData.agreements && userData.agreements)
+                }
+            ],
+            "trusted_contact": {
+                "given_name": "Jane",
+                "family_name": "Doe",
+                "email_address": "jane.doe@example.com"
+            }
+        })
+    }
+
     const alpacaRes = await fetch(`${alpacaUrl}/accounts`, {
         method: "POST",
         headers: {
@@ -45,104 +154,17 @@ export const createAlpacaUser = async (userData) => {
         },
         body: JSON.stringify(userData)
     })
-    const alpacaData = await alpacaRes.json()
+    let alpacaData = await alpacaRes.json()
+    if (alpacaRes.status === 200) alpacaData = extractAlpacaUser(alpacaData)
     return { status: alpacaRes.status, data: alpacaData }
 }
 
-export const createFakeAlpacaUser = async (userData) => {
-    return {
-        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        "account_number": "string",
-        "account_type": "trading",
-        "status": "ACTIVE",
-        "crypto_status": "ACTIVE",
-        "currency": "string",
-        "created_at": "2024-05-07T08:07:14.464Z",
-        "last_equity": "string",
-        "enabled_assets": [
-            "us_equity"
-        ],
-        "contact": {
-            "email_address": "john.doe@example.com",
-            "phone_number": "+15556667788",
-            "street_address": [
-                "20 N San Mateo Dr"
-            ],
-            "unit": "string",
-            "city": "San Mateo",
-            "state": "CA",
-            "postal_code": "94401",
-            ...userData.contact
-        },
-        "identity": {
-            "given_name": "John",
-            "family_name": "Doe",
-            "date_of_birth": "1990-01-01",
-            "tax_id": "666-55-4321",
-            "tax_id_type": "USA_SSN",
-            "country_of_citizenship": "AUS",
-            "country_of_birth": "AUS",
-            "country_of_tax_residence": "USA",
-            "funding_source": [
-                "employment_income"
-            ],
-            ...userData.identity
-        },
-        "disclosures": {
-            "is_control_person": false,
-            "is_affiliated_exchange_or_finra": false,
-            "is_politically_exposed": false,
-            "immediate_family_exposed": false,
-            ...userData.disclosures
-        },
-        "documents": [
-            [
-                {
-                    "document_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                    "document_type": "identity_verification",
-                    "created_at": "2024-05-07T08:07:14.464Z",
-                    "mime_type": "string",
-                    "content": "string",
-                    "document_sub_type": "string"
-                }
-            ]
-        ],
-        "agreements": [
-            {
-                "agreement": "customer_agreement",
-                "signed_at": "2019-09-11T18:09:33Z",
-                "ip_address": "185.13.21.99",
-                "revision": "string",
-                ...userData.agreement
-            }
-        ],
-        "trusted_contact": {
-            "given_name": "Jane",
-            "family_name": "Doe",
-            "email_address": "jane.doe@example.com"
-        }
-    }
-}
-
-export const updateAlpacaUser = async (userData, account_id) => {
-    const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}`, {
-        method: "PATCH",
-        headers: {
-            accept: "application/json",
-            "Content-Type": "application/json",
-            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
-        },
-        body: JSON.stringify(userData)
-    })
-    const alpacaData = await alpacaRes.json()
-    return { status: alpacaRes.status, data: alpacaData }
-}
-
-export const updateFakeAlpacaUser = async (userData: UserData) => {
-    return {
-        status: 200, data: {
-            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-            "account_number": "string",
+export const updateAlpacaUser = async (userData: UserData, userOnDb, opt?: Options) => {
+    if (opt?.returnFake) return {
+        status: 200,
+        data: extractAlpacaUser({
+            "id": userOnDb.alpaca_id,
+            "account_number": userOnDb.account_number,
             "status": "ACTIVE",
             "crypto_status": "ACTIVE",
             "kyc_result": {
@@ -165,7 +187,7 @@ export const updateFakeAlpacaUser = async (userData: UserData) => {
                 "city": "San Mateo",
                 "state": "CA",
                 "postal_code": "94401",
-                ...userData.contact
+                ...(userData && userData.contact)
             },
             "identity": {
                 "given_name": "John",
@@ -179,22 +201,32 @@ export const updateFakeAlpacaUser = async (userData: UserData) => {
                 "funding_source": [
                     "employment_income"
                 ],
-                ...userData.identity
+                ...(userData && userData.identity)
             },
             "disclosures": {
                 "is_control_person": false,
                 "is_affiliated_exchange_or_finra": false,
                 "is_politically_exposed": false,
                 "immediate_family_exposed": false,
-                ...userData.disclosures
+                ...(userData && userData.disclosures)
             },
-            "agreements": [
+            "agreements": userData && userData.agreements ? [...userData.agreements] : [
+                {
+                    "agreement": "account_agreement",
+                    "signed_at": "2019-09-11T18:09:33Z",
+                    "ip_address": "185.13.21.99"
+                },
                 {
                     "agreement": "customer_agreement",
                     "signed_at": "2019-09-11T18:09:33Z",
-                    "ip_address": "185.13.21.99",
-                    "revision": "string"
-                }
+                    "ip_address": "185.13.21.99"
+                },
+                {
+                    "agreement": "margin_agreement",
+                    "signed_at": "2019-09-11T18:09:33Z",
+                    "ip_address": "185.13.21.99"
+                },
+
             ],
             "documents": [
                 {
@@ -265,26 +297,39 @@ export const updateFakeAlpacaUser = async (userData: UserData) => {
             "enabled_assets": [
                 "us_equity"
             ]
-        }
+        })
     }
+
+    const alpacaRes = await fetch(`${alpacaUrl}/accounts/${userOnDb.alpaca_id}`, {
+        method: "PATCH",
+        headers: {
+            accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        },
+        body: JSON.stringify(userData)
+    })
+    let alpacaData = await alpacaRes.json()
+    if (alpacaRes.status === 200) alpacaData = extractAlpacaUser(alpacaData)
+    return { status: alpacaRes.status, data: alpacaData }
 }
 
-export const closeAlpacaUser = async (account_id: string) => {
+export const closeAlpacaUser = async (account_id: string, opt?: Options) => {
+    if (opt?.returnFake) return true
+
     const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}/actions/close`, {
         method: "POST",
         headers: {
             Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
         }
     })
-    if (alpacaRes.status === 200) return true
+    if (alpacaRes.status === 204) return true
     else return false
 }
 
-export const closeFakeAlpacaUser = async () => {
-    return true
-}
+export const reopenAlpacaUser = async (account_id: string, opt?: Options) => {
+    if (opt?.returnFake) return true
 
-export const reopenAlpacaUser = async (account_id: string) => {
     const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}/actions/reopen`, {
         method: "POST",
         headers: {
@@ -293,13 +338,6 @@ export const reopenAlpacaUser = async (account_id: string) => {
             Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
         }
     })
-    const alpacaData = await alpacaRes.json()
-    console.log(alpacaRes.status)
-    console.dir(alpacaData)
     if (alpacaRes.status === 200) return true
     else return false
-}
-
-export const reopenFakeAlpacaUser = async () => {
-    return true
 }
