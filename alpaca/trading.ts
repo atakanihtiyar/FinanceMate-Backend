@@ -70,6 +70,17 @@ export const getTradingDetails = async (account_id: string, opt?: Options) => {
             "pending_reg_taf_fees": "0.01"
         })
     }
+
+    const alpacaRes = await fetch(`${alpacaUrl}/trading/accounts/${account_id}/account`, {
+        method: "GET",
+        headers: {
+            accept: "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        },
+    })
+    let alpacaData = await alpacaRes.json()
+    if (alpacaRes.status === 200) alpacaData = extractTradingData(alpacaData)
+    return { status: alpacaRes.status, data: alpacaData }
 }
 
 const extractPositions = (data) => {
@@ -132,6 +143,17 @@ export const getPositions = async (account_id: string, opt?: Options) => {
             }
         ])
     }
+
+    const alpacaRes = await fetch(`${alpacaUrl}/trading/accounts/${account_id}/positions`, {
+        method: "GET",
+        headers: {
+            accept: "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        },
+    })
+    let alpacaData = await alpacaRes.json()
+    if (alpacaRes.status === 200) alpacaData = extractPositions(alpacaData)
+    return { status: alpacaRes.status, data: alpacaData }
 }
 
 const extractOrders = (data) => {
@@ -196,4 +218,15 @@ export const getOrders = async (account_id: string, opt?: Options) => {
             }
         ])
     }
+
+    const alpacaRes = await fetch(`${alpacaUrl}/trading/accounts/${account_id}/orders?status=all`, {
+        method: "GET",
+        headers: {
+            accept: "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        },
+    })
+    let alpacaData = await alpacaRes.json()
+    if (alpacaRes.status === 200) alpacaData = extractOrders(alpacaData)
+    return { status: alpacaRes.status, data: alpacaData }
 }

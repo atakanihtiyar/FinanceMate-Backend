@@ -11,20 +11,25 @@ export interface IRequestWithUser extends Request {
     }
 }
 
-tradingRoutes.get("/:alpaca_number", isUserLoggedIn, async (req: IRequestWithUser, res: Response) => {
+tradingRoutes.get("/:account_number", isUserLoggedIn, async (req: IRequestWithUser, res: Response) => {
     try {
         const account_number = req.params.account_number
+        const requester = req.user
+        if (!requester || (requester.account_number !== account_number && !requester.is_admin))
+            throw new Error("You are unauthorized for this action")
 
-        const result = await Promise.all([getTradingDetails(account_number, { returnFake: true }), getPositions(account_number, { returnFake: true }), getOrders(account_number, { returnFake: true })])
-        console.log(result)
-        if (result[0].status !== 200 || result[1].status !== 200 || result[2].status !== 200) throw new Error("Data couldn't fetch from alpaca")
+        const foundUser = await getUser(account_number)
+        if (!foundUser) throw new Error("User not found")
+
+        const results = await Promise.all([getTradingDetails(foundUser.alpaca_id), getPositions(foundUser.alpaca_id), getOrders(foundUser.alpaca_id)])
+        if (results[0].status !== 200 || results[1].status !== 200 || results[2].status !== 200) throw new Error("Data couldn't fetch from alpaca")
         const resData = {
-            ...result[0].data,
+            ...results[0].data,
             positions: [
-                ...result[1].data
+                ...results[1].data
             ],
             orders: [
-                ...result[2].data
+                ...results[2].data
             ]
         }
         return res.json(resData)
