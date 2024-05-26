@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import { getUser } from "../db/controllers/userController";
 import { isUserLoggedIn } from "../middleware";
-import { getOrders, getPositions, getTradingDetails } from "../alpaca/trading";
+import { getOrders, getPositions, getTradingDetails } from "../alpaca_services/trading_service";
 const tradingRoutes = express.Router()
 
 export interface IRequestWithUser extends Request {

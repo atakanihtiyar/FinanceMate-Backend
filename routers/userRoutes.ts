@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import { createUser, getUser, updateUser, closeUser, reopenUser } from "../db/controllers/userController";
 import { isUserLoggedIn } from "../middleware";
 import User from "../db/models/User";
-import { closeAlpacaUser, createAlpacaUser, reopenAlpacaUser, updateAlpacaUser } from "../alpaca/accounts";
+import { closeAlpacaUser, createAlpacaUser, reopenAlpacaUser, updateAlpacaUser } from "../alpaca_services/accounts_service";
 const userRoutes = express.Router()
 
 export interface IRequestWithUser extends Request {

@@ -10,10 +10,12 @@ const extractTradingData = (data) => {
     return {
         currency: data.currency,
         portfolio_value: data.equity,
+        buying_power: data.buying_power,
         cash: data.cash,
         long_market_value: data.long_market_value,
         short_market_value: data.short_market_value,
         last_portfolio_value: data.last_equity,
+        last_buying_power: data.last_buying_power,
         last_cash: data.last_cash,
         last_long_market_value: data.last_long_market_value,
         last_short_market_value: data.last_short_market_value,
