@@ -11,7 +11,7 @@ export interface IRequestWithUser extends Request {
     }
 }
 
-tradingRoutes.get("/:account_number", isUserLoggedIn, async (req: IRequestWithUser, res: Response) => {
+tradingRoutes.get("/:account_number/account", isUserLoggedIn, async (req: IRequestWithUser, res: Response) => {
     try {
         const account_number = req.params.account_number
         const requester = req.user
@@ -20,23 +20,57 @@ tradingRoutes.get("/:account_number", isUserLoggedIn, async (req: IRequestWithUs
 
         const foundUser = await getUser(account_number)
         if (!foundUser) throw new Error("User not found")
-
-        const results = await Promise.all([getTradingDetails(foundUser.alpaca_id), getPositions(foundUser.alpaca_id), getOrders(foundUser.alpaca_id)])
-        if (results[0].status !== 200 || results[1].status !== 200 || results[2].status !== 200) throw new Error("Data couldn't fetch from alpaca")
-        const resData = {
-            ...results[0].data,
-            positions: [
-                ...results[1].data
-            ],
-            orders: [
-                ...results[2].data
-            ]
-        }
-        return res.json(resData)
+        const { status, data } = await getTradingDetails(foundUser.alpaca_id)
+        if (status === 200)
+            return res.json(data)
+        else
+            throw new Error(data)
     }
     catch (err) {
         console.log(err)
-        return res.status(500).json({ msg: "Something went wrong", err })
+        return res.status(500).json({ msg: err })
+    }
+})
+
+tradingRoutes.get("/:account_number/positions", isUserLoggedIn, async (req: IRequestWithUser, res: Response) => {
+    try {
+        const account_number = req.params.account_number
+        const requester = req.user
+        if (!requester || (requester.account_number !== account_number && !requester.is_admin))
+            throw new Error("You are unauthorized for this action")
+
+        const foundUser = await getUser(account_number)
+        if (!foundUser) throw new Error("User not found")
+        const { status, data } = await getPositions(foundUser.alpaca_id)
+        if (status === 200)
+            return res.json(data)
+        else
+            throw new Error(data)
+    }
+    catch (err) {
+        console.log(err)
+        return res.status(500).json({ msg: err })
+    }
+})
+
+tradingRoutes.get("/:account_number/orders", isUserLoggedIn, async (req: IRequestWithUser, res: Response) => {
+    try {
+        const account_number = req.params.account_number
+        const requester = req.user
+        if (!requester || (requester.account_number !== account_number && !requester.is_admin))
+            throw new Error("You are unauthorized for this action")
+
+        const foundUser = await getUser(account_number)
+        if (!foundUser) throw new Error("User not found")
+        const { status, data } = await getOrders(foundUser.alpaca_id)
+        if (status === 200)
+            return res.json(data)
+        else
+            throw new Error(data)
+    }
+    catch (err) {
+        console.log(err)
+        return res.status(500).json({ msg: err })
     }
 })
 

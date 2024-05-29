@@ -24,7 +24,7 @@ sessionRoutes.get("/check", (req: IRequestWithUser, res: Response) => {
 sessionRoutes.post("/logout", (req, res) => {
     req.logout(function (err) {
         if (err) { return res.json({ result: false, message: err.message }) }
-        return res.json({ result: true, message: "successfully logout" })
+        return res.status(201).json({ result: true, message: "successfully logout" })
     });
 })
 
