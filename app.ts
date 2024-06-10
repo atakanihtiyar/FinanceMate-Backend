@@ -10,6 +10,7 @@ import session, { SessionOptions } from 'express-session'
 import userRoutes from './routers/userRoutes'
 import sessionRoutes from './routers/sessionRoutes'
 import tradingRoutes from './routers/tradingRoutes'
+import assetRoutes from './routers/assetRoutes'
 
 connectToAtlas()
 
@@ -53,6 +54,7 @@ try {
 	app.use("/users", userRoutes)
 	app.use("/session", sessionRoutes)
 	app.use("/trading", tradingRoutes)
+	app.use("/assets", assetRoutes)
 
 	app.listen(PORT, () => {
 		return console.log(`Server listening at http://localhost:${PORT}`)
