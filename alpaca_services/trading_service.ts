@@ -168,7 +168,7 @@ const extractOrders = (data) => {
             qty: item.qty,
             filled_qty: item.filled_qty,
             filled_avg_price: item.filled_avg_price,
-            order_type: item.order_type,
+            type: item.type,
             side: item.side,
             limit_price: item.limit_price,
             stop_price: item.stop_price,
@@ -230,5 +230,96 @@ export const getOrders = async (account_id: string, opt?: Options) => {
     })
     let alpacaData = await alpacaRes.json()
     if (alpacaRes.status === 200) alpacaData = extractOrders(alpacaData)
+    return { status: alpacaRes.status, data: alpacaData }
+}
+
+const extractCreateOrder = (data) => {
+    return {
+        order_id: data.id,
+        symbol: data.symbol,
+        filled_at: data.filled_at,
+        created_at: data.created_at,
+        qty: data.qty,
+        filled_qty: data.filled_qty,
+        filled_avg_price: data.filled_avg_price,
+        type: data.type,
+        side: data.side,
+        limit_price: data.limit_price,
+        stop_price: data.stop_price,
+        commission: data.commission,
+    }
+}
+
+interface Order {
+    symbol: string,
+    qty: string,
+    side: "buy" | "sell",
+    type: "market" | "limit" | "stop" | "stop_limit",
+    time_in_force: "day",
+    limit_price: string,
+    stop_price: string,
+}
+
+export const createOrder = async (account_id: string, order: Order, opt?: Options) => {
+    if (opt?.returnFake) return {
+        status: 200,
+        data: extractCreateOrder({
+            "id": "5042d121-f9d3-4e64-a680-3e1faadc2114",
+            "client_order_id": "05e41e5a-4f6f-42da-90e2-caedac12b926",
+            "created_at": "2024-04-04T14:56:29.216131Z",
+            "updated_at": "2024-04-04T14:56:29.276068Z",
+            "submitted_at": "2024-04-04T14:56:29.224031Z",
+            "filled_at": "2024-04-04T14:56:29.272053Z",
+            "expired_at": null,
+            "canceled_at": null,
+            "failed_at": null,
+            "replaced_at": null,
+            "replaced_by": null,
+            "replaces": null,
+            "asset_id": "b0b6dd9d-8b9b-48a9-ba46-b9d54906e415",
+            "symbol": "AAPL",
+            "asset_class": "us_equity",
+            "notional": null,
+            "qty": "1",
+            "filled_qty": "1",
+            "filled_avg_price": "170.98",
+            "order_class": "",
+            "order_type": "market",
+            "type": "market",
+            "side": "buy",
+            "time_in_force": "day",
+            "limit_price": null,
+            "stop_price": null,
+            "status": "filled",
+            "extended_hours": false,
+            "legs": null,
+            "trail_percent": null,
+            "trail_price": null,
+            "hwm": null,
+            "commission": "0",
+            "subtag": null,
+            "source": "broker_dashboard",
+            ...order
+        })
+    }
+
+    if (order.type === "market" || order.type === "limit")
+        delete order.stop_price
+
+    if (order.type === "market" || order.type === "stop")
+        delete order.limit_price
+
+    const alpacaRes = await fetch(`${alpacaUrl}/trading/accounts/${account_id}/orders`, {
+        method: "POST",
+        headers: {
+            accept: "application/json",
+            'content-type': 'application/json',
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64"),
+        },
+        body: JSON.stringify(order)
+    })
+
+    let alpacaData = await alpacaRes.json()
+    if (alpacaRes.status === 200) alpacaData = extractCreateOrder(alpacaData)
     return { status: alpacaRes.status, data: alpacaData }
 }
