@@ -158,22 +158,35 @@ export const getPositions = async (account_id: string, opt?: Options) => {
     return { status: alpacaRes.status, data: alpacaData }
 }
 
+const extractOrder = (data) => {
+    return {
+        order_id: data.id,
+        symbol: data.symbol,
+        asset_class: data.asset_class,
+        qty: data.qty,
+        filled_qty: data.filled_qty,
+        filled_avg_price: data.filled_avg_price,
+        commission: data.commission,
+        commission_bps: data.commission_bps,
+        type: data.type,
+        side: data.side,
+        time_in_force: data.time_in_force,
+        limit_price: data.limit_price,
+        stop_price: data.stop_price,
+        status: data.status,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        submitted_at: data.submitted_at,
+        filled_at: data.filled_at,
+        expired_at: data.expired_at,
+        canceled_at: data.canceled_at,
+        failed_at: data.failed_at,
+    }
+}
+
 const extractOrders = (data) => {
     return data.map((item) => {
-        return {
-            order_id: item.id,
-            symbol: item.symbol,
-            filled_at: item.filled_at,
-            created_at: item.created_at,
-            qty: item.qty,
-            filled_qty: item.filled_qty,
-            filled_avg_price: item.filled_avg_price,
-            type: item.type,
-            side: item.side,
-            limit_price: item.limit_price,
-            stop_price: item.stop_price,
-            commission: item.commission,
-        }
+        return extractOrder(item)
     })
 }
 
@@ -233,23 +246,6 @@ export const getOrders = async (account_id: string, opt?: Options) => {
     return { status: alpacaRes.status, data: alpacaData }
 }
 
-const extractCreateOrder = (data) => {
-    return {
-        order_id: data.id,
-        symbol: data.symbol,
-        filled_at: data.filled_at,
-        created_at: data.created_at,
-        qty: data.qty,
-        filled_qty: data.filled_qty,
-        filled_avg_price: data.filled_avg_price,
-        type: data.type,
-        side: data.side,
-        limit_price: data.limit_price,
-        stop_price: data.stop_price,
-        commission: data.commission,
-    }
-}
-
 interface Order {
     symbol: string,
     qty: string,
@@ -263,7 +259,7 @@ interface Order {
 export const createOrder = async (account_id: string, order: Order, opt?: Options) => {
     if (opt?.returnFake) return {
         status: 200,
-        data: extractCreateOrder({
+        data: extractOrder({
             "id": "5042d121-f9d3-4e64-a680-3e1faadc2114",
             "client_order_id": "05e41e5a-4f6f-42da-90e2-caedac12b926",
             "created_at": "2024-04-04T14:56:29.216131Z",
@@ -320,6 +316,6 @@ export const createOrder = async (account_id: string, order: Order, opt?: Option
     })
 
     let alpacaData = await alpacaRes.json()
-    if (alpacaRes.status === 200) alpacaData = extractCreateOrder(alpacaData)
+    if (alpacaRes.status === 200) alpacaData = extractOrder(alpacaData)
     return { status: alpacaRes.status, data: alpacaData }
 }

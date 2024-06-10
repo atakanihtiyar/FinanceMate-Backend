@@ -74,7 +74,7 @@ tradingRoutes.get("/:account_number/orders", isUserLoggedIn, async (req: IReques
     }
 })
 
-tradingRoutes.post("/:account_number/orders", /* isUserLoggedIn,  */async (req: IRequestWithUser, res: Response) => {
+tradingRoutes.post("/:account_number/orders", isUserLoggedIn, async (req: IRequestWithUser, res: Response) => {
     try {
         const account_number = req.params.account_number
         const requester = req.user
