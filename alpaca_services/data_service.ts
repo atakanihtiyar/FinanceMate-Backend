@@ -50,3 +50,63 @@ export const getLatestBar = async (symbol_or_asset_id: string, opt?: Options) =>
     if (alpacaRes.status === 200) alpacaData = extractLatestBar(alpacaData)
     return { status: alpacaRes.status, data: alpacaData }
 }
+
+export const getHistoricalBars = async (symbol_or_asset_id: string, timeFrame: "1Hour" | "1Day", opt?: Options) => {
+    if (opt?.returnFake) return {
+        status: 200,
+        data: {
+            "bars": [
+                {
+                    "t": "2022-01-03T09:00:00Z",
+                    "o": 178.26,
+                    "h": 178.26,
+                    "l": 178.21,
+                    "c": 178.21,
+                    "v": 1118,
+                    "n": 65,
+                    "vw": 178.235733
+                },
+                {
+                    "t": "2022-01-03T09:00:00Z",
+                    "o": 178.26,
+                    "h": 178.26,
+                    "l": 178.21,
+                    "c": 178.21,
+                    "v": 1118,
+                    "n": 65,
+                    "vw": 178.235733
+                },
+                {
+                    "t": "2022-01-03T09:00:00Z",
+                    "o": 178.26,
+                    "h": 178.26,
+                    "l": 178.21,
+                    "c": 178.21,
+                    "v": 1118,
+                    "n": 65,
+                    "vw": 178.235733
+                }
+            ],
+            "symbol": "AAPL",
+            "next_page_token": "QUFQTHxNfDIwMjItMDEtMDNUMDk6MDA6MDAuMDAwMDAwMDAwWg=="
+        }
+    }
+    const start = timeFrame === "1Hour" ? new Date(Date.now() - 1000 * 60 * 60 * 24 * 5) :
+        timeFrame === "1Day" ? new Date(Date.now() - 1000 * 60 * 60 * 24 * 60) :
+            timeFrame === "1Week" ? new Date(Date.now() - 1000 * 60 * 60 * 24 * 7 * 30) : new Date(Date.now())
+    const alpacaRes = await fetch(`${alpacaDataUrl}/stocks/${symbol_or_asset_id}/bars?` + new URLSearchParams({
+        timeframe: timeFrame,
+        limit: "1000",
+        adjustment: "raw",
+        start: start.toISOString()
+    }), {
+        method: "GET",
+        headers: {
+            accept: "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        }
+    })
+
+    let alpacaData = await alpacaRes.json()
+    return { status: alpacaRes.status, data: alpacaData }
+}

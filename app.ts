@@ -11,6 +11,7 @@ import userRoutes from './routers/userRoutes'
 import sessionRoutes from './routers/sessionRoutes'
 import tradingRoutes from './routers/tradingRoutes'
 import assetRoutes from './routers/assetRoutes'
+import dataRoutes from './routers/dataRoutes'
 
 connectToAtlas()
 
@@ -55,6 +56,7 @@ try {
 	app.use("/session", sessionRoutes)
 	app.use("/trading", tradingRoutes)
 	app.use("/assets", assetRoutes)
+	app.use("/data", dataRoutes)
 
 	app.listen(PORT, () => {
 		return console.log(`Server listening at http://localhost:${PORT}`)
