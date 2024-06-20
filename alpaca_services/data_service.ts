@@ -51,54 +51,38 @@ export const getLatestBar = async (symbol_or_asset_id: string, opt?: Options) =>
     return { status: alpacaRes.status, data: alpacaData }
 }
 
-export const getHistoricalBars = async (symbol_or_asset_id: string, timeFrame: "1Hour" | "1Day", opt?: Options) => {
-    if (opt?.returnFake) return {
-        status: 200,
-        data: {
-            "bars": [
-                {
-                    "t": "2022-01-03T09:00:00Z",
-                    "o": 178.26,
-                    "h": 178.26,
-                    "l": 178.21,
-                    "c": 178.21,
-                    "v": 1118,
-                    "n": 65,
-                    "vw": 178.235733
-                },
-                {
-                    "t": "2022-01-03T09:00:00Z",
-                    "o": 178.26,
-                    "h": 178.26,
-                    "l": 178.21,
-                    "c": 178.21,
-                    "v": 1118,
-                    "n": 65,
-                    "vw": 178.235733
-                },
-                {
-                    "t": "2022-01-03T09:00:00Z",
-                    "o": 178.26,
-                    "h": 178.26,
-                    "l": 178.21,
-                    "c": 178.21,
-                    "v": 1118,
-                    "n": 65,
-                    "vw": 178.235733
-                }
-            ],
-            "symbol": "AAPL",
-            "next_page_token": "QUFQTHxNfDIwMjItMDEtMDNUMDk6MDA6MDAuMDAwMDAwMDAwWg=="
-        }
+const getStartDate = (timeFrame: string): Date => {
+    const now = Date.now()
+    const timeFrameMap: { [key: string]: number } = {
+        "5Min": 5 * 60 * 1000,
+        "15Min": 15 * 60 * 1000,
+        "30Min": 30 * 60 * 1000,
+        "1Hour": 60 * 60 * 1000,
+        "1Day": 24 * 60 * 60 * 1000,
+        "1Week": 7 * 24 * 60 * 60 * 1000,
+        "1Month": 30 * 24 * 60 * 60 * 1000,
+        "12Month": 12 * 90 * 24 * 60 * 60 * 1000,
     }
-    const start = timeFrame === "1Hour" ? new Date(Date.now() - 1000 * 60 * 60 * 24 * 5) :
-        timeFrame === "1Day" ? new Date(Date.now() - 1000 * 60 * 60 * 24 * 60) :
-            timeFrame === "1Week" ? new Date(Date.now() - 1000 * 60 * 60 * 24 * 7 * 30) : new Date(Date.now())
+
+    const startDate = new Date(now - (timeFrameMap[timeFrame] * 1000 || 0))
+    if (startDate.getUTCFullYear() < 2006)
+        startDate.setUTCFullYear(2006)
+
+    return startDate
+}
+
+export const getHistoricalBars = async (
+    symbol_or_asset_id: string,
+    timeFrame: "5Min" | "15Min" | "30Min" | "1Hour" | "1Day" | "1Week" | "1Month" | "12Month",
+) => {
+    const dataLimit = 1000
+    const startDate = getStartDate(timeFrame)
+
     const alpacaRes = await fetch(`${alpacaDataUrl}/stocks/${symbol_or_asset_id}/bars?` + new URLSearchParams({
         timeframe: timeFrame,
-        limit: "1000",
-        adjustment: "raw",
-        start: start.toISOString()
+        limit: dataLimit.toString(),
+        adjustment: "split",
+        start: startDate.toISOString()
     }), {
         method: "GET",
         headers: {
@@ -107,6 +91,6 @@ export const getHistoricalBars = async (symbol_or_asset_id: string, timeFrame: "
         }
     })
 
-    let alpacaData = await alpacaRes.json()
+    const alpacaData = await alpacaRes.json()
     return { status: alpacaRes.status, data: alpacaData }
 }
