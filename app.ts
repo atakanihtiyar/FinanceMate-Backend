@@ -27,12 +27,15 @@ app.use(express.json())
 
 const sessionOptions: SessionOptions = {
 	secret: sessionSecret,
-	resave: true,
-	saveUninitialized: false,
+	resave: false,
+	saveUninitialized: true,
+	proxy: true,
 	cookie: {
-		httpOnly: false,
+		httpOnly: true,
+		secure: true,
 		sameSite: "none",
-		expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7)
+		expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+		maxAge: 1000 * 60 * 60 * 24 * 7
 	}
 }
 app.use(session(sessionOptions))
