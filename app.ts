@@ -20,9 +20,9 @@ connectToAtlas()
 const app = express()
 const PORT = process.env.PORT || 5050
 const sessionSecret = process.env.SESSION_SECRET || "itookmypills"
-const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173"
+const allowedOrigin = process.env.CLIENT_ON === "local" ? process.env.CLIENT_LOCAL_URL : process.env.CLIENT_REMOTE_URL
 
-app.use(cors({ origin: frontendUrl, credentials: true }))
+app.use(cors({ origin: allowedOrigin, credentials: true }))
 app.use(express.json())
 
 const sessionOptions: SessionOptions = {
@@ -51,6 +51,8 @@ passport.deserializeUser(User.deserializeUser())
 
 // #endregion
 
+// #region APP
+
 try {
 	app.use("/users", userRoutes)
 	app.use("/session", sessionRoutes)
@@ -65,3 +67,5 @@ try {
 catch (err) {
 	console.log(err)
 }
+
+// #endregion
