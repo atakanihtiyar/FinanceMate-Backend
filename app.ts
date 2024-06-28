@@ -61,7 +61,7 @@ try {
 	app.use("/data", dataRoutes)
 
 	app.listen(PORT, () => {
-		return console.log(`Server listening at http://localhost:${PORT}`)
+		return console.log(`Server is listening`)
 	})
 }
 catch (err) {
