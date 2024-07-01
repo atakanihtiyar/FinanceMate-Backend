@@ -319,3 +319,15 @@ export const createOrder = async (account_id: string, order: Order, opt?: Option
     if (alpacaRes.status === 200) alpacaData = extractOrder(alpacaData)
     return { status: alpacaRes.status, data: alpacaData }
 }
+
+export const getAccountPortfolioHistory = async (account_id: string) => {
+    const alpacaRes = await fetch(`${alpacaUrl}/trading/accounts/${account_id}/account/portfolio/history`, {
+        method: "GET",
+        headers: {
+            accept: "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        }
+    })
+    let alpacaData = await alpacaRes.json()
+    return { status: alpacaRes.status, data: alpacaData }
+}
