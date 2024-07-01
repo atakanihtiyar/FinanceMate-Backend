@@ -103,11 +103,12 @@ tradingRoutes.get("/:account_number/portfolio_history", isUserLoggedIn, async (r
     try {
         const account_number = req.params.account_number
         const requester = req.user
+        const timeframe = req.query.timeframe as "5Min" | "15Min" | "1H" | "1D"
         if (!requester || (requester.account_number !== account_number && !requester.is_admin)) throw new Error("You are unauthorized for this action")
         const foundUserId = await getUser(account_number, "alpaca_id")
         if (!foundUserId) throw new Error("There is not a user with this account number")
 
-        const { status, data } = await getAccountPortfolioHistory(foundUserId.alpaca_id)
+        const { status, data } = await getAccountPortfolioHistory(foundUserId.alpaca_id, timeframe)
 
         if (status === 200)
             return res.json(data)
