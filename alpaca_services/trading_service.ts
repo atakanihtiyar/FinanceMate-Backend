@@ -319,3 +319,35 @@ export const createOrder = async (account_id: string, order: Order, opt?: Option
     if (alpacaRes.status === 200) alpacaData = extractOrder(alpacaData)
     return { status: alpacaRes.status, data: alpacaData }
 }
+
+const getStartDate = (timeFrame: string): Date => {
+    const now = Date.now()
+    const timeFrameMap: { [key: string]: number } = {
+        "5Min": 5 * 60 * 1000,
+        "15Min": 15 * 60 * 1000,
+        "1H": 60 * 60 * 1000,
+        "1D": 24 * 60 * 60 * 1000,
+    }
+
+    const startDate = new Date(now - (timeFrameMap[timeFrame] * 1000 || 0))
+    if (startDate.getUTCFullYear() < 2006)
+        startDate.setUTCFullYear(2006)
+
+    return startDate
+}
+
+export const getAccountPortfolioHistory = async (
+    account_id: string,
+    timeframe: "5Min" | "15Min" | "1H" | "1D"
+) => {
+    const alpacaRes = await fetch(`${alpacaUrl}/trading/accounts/${account_id}/account/portfolio/history?` + new URLSearchParams({ timeframe, period: "30D" }), {
+        method: "GET",
+        headers: {
+            accept: "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        }
+    })
+
+    let alpacaData = await alpacaRes.json()
+    return { status: alpacaRes.status, data: alpacaData }
+}

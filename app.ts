@@ -24,6 +24,7 @@ const allowedOrigin = process.env.CLIENT_ON === "local" ? process.env.CLIENT_LOC
 
 app.use(cors({ origin: allowedOrigin, credentials: true }))
 app.use(express.json())
+console.log("CLIENT ON: ", allowedOrigin)
 
 const sessionOptions: SessionOptions = {
 	secret: sessionSecret,
