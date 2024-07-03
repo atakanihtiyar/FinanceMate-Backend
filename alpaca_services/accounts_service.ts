@@ -341,3 +341,54 @@ export const reopenAlpacaUser = async (account_id: string, opt?: Options) => {
     if (alpacaRes.status === 200) return true
     else return false
 }
+
+const extractAchRelationships = (relationships) => {
+    return relationships.map((relation) => {
+        return {
+            relation_id: relation.id,
+            created_at: relation.created_at,
+            updated_at: relation.updated_at,
+            status: relation.status,
+            account_owner_name: relation.account_owner_name,
+            bank_account_type: relation.bank_account_type,
+            bank_account_number: relation.bank_account_number,
+            bank_routing_number: relation.bank_routing_number,
+            nickname: relation.nickname,
+        }
+    })
+}
+
+export const getAchRelationships = async (account_id: string, opt?: Options) => {
+    if (opt?.returnFake) {
+        return {
+            status: 200,
+            data: [
+                {
+                    "id": "61e69015-8549-4bfd-b9c3-01e75843f47d",
+                    "created_at": "2021-03-16T18:38:01.942282Z",
+                    "updated_at": "2021-03-16T18:38:01.942282Z",
+                    "account_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "status": "QUEUED",
+                    "account_owner_name": "string",
+                    "bank_account_type": "CHECKING",
+                    "bank_account_number": "string",
+                    "bank_routing_number": "string",
+                    "nickname": "string"
+                }
+            ]
+        }
+    }
+
+    const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}/ach_relationships`, {
+        method: "GET",
+        headers: {
+            accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        }
+    })
+    let alpacaData = await alpacaRes.json()
+    console.log(alpacaData)
+    if (alpacaRes.status === 200) return { status: 200, data: extractAchRelationships(alpacaData) }
+    else return alpacaData
+}
