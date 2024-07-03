@@ -10,7 +10,9 @@ const extractAssetData = (data) => {
     return {
         exchange: data.exchange,
         symbol: data.symbol,
-        name: data.name
+        name: data.name,
+        class: data.class,
+        status: data.status,
     }
 }
 
