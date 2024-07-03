@@ -342,19 +342,32 @@ export const reopenAlpacaUser = async (account_id: string, opt?: Options) => {
     else return false
 }
 
+interface AchData {
+    account_owner_name: string,
+    bank_account_type: "CHECKING" | "SAVINGS",
+    bank_account_number: string,
+    bank_routing_number: string,
+    nickname?: string,
+}
+
+
+const extractAchRelationship = (relation) => {
+    return {
+        relation_id: relation.id,
+        created_at: relation.created_at,
+        updated_at: relation.updated_at,
+        status: relation.status,
+        account_owner_name: relation.account_owner_name,
+        bank_account_type: relation.bank_account_type,
+        bank_account_number: relation.bank_account_number,
+        bank_routing_number: relation.bank_routing_number,
+        nickname: relation.nickname,
+    }
+}
+
 const extractAchRelationships = (relationships) => {
     return relationships.map((relation) => {
-        return {
-            relation_id: relation.id,
-            created_at: relation.created_at,
-            updated_at: relation.updated_at,
-            status: relation.status,
-            account_owner_name: relation.account_owner_name,
-            bank_account_type: relation.bank_account_type,
-            bank_account_number: relation.bank_account_number,
-            bank_routing_number: relation.bank_routing_number,
-            nickname: relation.nickname,
-        }
+        return extractAchRelationship(relation)
     })
 }
 
@@ -388,7 +401,58 @@ export const getAchRelationships = async (account_id: string, opt?: Options) => 
         }
     })
     let alpacaData = await alpacaRes.json()
-    console.log(alpacaData)
     if (alpacaRes.status === 200) return { status: 200, data: extractAchRelationships(alpacaData) }
     else return alpacaData
+}
+
+export const createAchRelationship = async (account_id: string, achData: AchData, opt?: Options) => {
+    if (opt?.returnFake) {
+        return {
+            status: 200,
+            data: {
+                "id": "61e69015-8549-4bfd-b9c3-01e75843f47d",
+                "created_at": "2021-03-16T18:38:01.942282Z",
+                "updated_at": "2021-03-16T18:38:01.942282Z",
+                "account_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "status": "QUEUED",
+                "account_owner_name": "string",
+                "bank_account_type": "CHECKING",
+                "bank_account_number": "string",
+                "bank_routing_number": "string",
+                "nickname": "string",
+                ...achData
+            }
+        }
+    }
+
+    const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}/ach_relationships`, {
+        method: "POST",
+        headers: {
+            accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        },
+        body: JSON.stringify(achData)
+    })
+    let alpacaData = await alpacaRes.json()
+    if (alpacaRes.status === 200) return { status: 200, data: extractAchRelationship(alpacaData) }
+    else return alpacaData
+}
+
+export const deleteAchRelationship = async (account_id: string, ach_relationship_id: string, opt?: Options) => {
+    if (opt?.returnFake) {
+        return {
+            status: 204
+        }
+    }
+    console.log(ach_relationship_id)
+
+    const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}/ach_relationships/${ach_relationship_id}`, {
+        method: "DELETE",
+        headers: {
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        },
+    })
+
+    return { status: 204 }
 }
