@@ -445,7 +445,6 @@ export const deleteAchRelationship = async (account_id: string, ach_relationship
             status: 204
         }
     }
-    console.log(ach_relationship_id)
 
     const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}/ach_relationships/${ach_relationship_id}`, {
         method: "DELETE",
@@ -455,4 +454,64 @@ export const deleteAchRelationship = async (account_id: string, ach_relationship
     })
 
     return { status: 204 }
+}
+
+export interface TransferData {
+    transfer_type: "ach",
+    relationship_id: string,
+    amount: number,
+    direction: "INCOMING" | "OUTGOING",
+    timing: "immediate",
+}
+
+const extractTransfer = (transfer) => {
+    return {
+        id: transfer.id,
+        relationship_id: transfer.relationship_id,
+        type: transfer.type,
+        status: transfer.status,
+        reason: transfer.reason,
+        amount: transfer.amount,
+        direction: transfer.direction,
+        created_at: transfer.created_at,
+    }
+}
+
+export const createTransfer = async (account_id: string, transferData: TransferData, opt?: Options) => {
+    if (opt?.returnFake) {
+        return {
+            status: 200,
+            data: extractTransfer({
+                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "relationship_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "bank_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "account_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "type": "ach",
+                "status": "QUEUED",
+                "reason": "string",
+                "amount": "string",
+                "direction": "INCOMING",
+                "created_at": "2024-07-04T09:25:37.991Z",
+                "updated_at": "2024-07-04T09:25:37.991Z",
+                "expires_at": "2024-07-04T09:25:37.991Z",
+                "additional_information": "string",
+                "hold_until": "2024-07-04T09:25:37.991Z",
+                "instant_amount": "string",
+                ...transferData
+            })
+        }
+    }
+
+    const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}/transfers`, {
+        method: "POST",
+        headers: {
+            accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        },
+        body: JSON.stringify(transferData)
+    })
+    let alpacaData = await alpacaRes.json()
+    if (alpacaRes.status === 200) return { status: 200, data: extractTransfer(alpacaData) }
+    else return alpacaData
 }

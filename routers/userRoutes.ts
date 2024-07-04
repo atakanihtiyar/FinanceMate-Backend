@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import { createUser, getUser, updateUser, closeUser, reopenUser } from "../db/controllers/userController";
 import { isUserLoggedIn } from "../middleware";
 import User from "../db/models/User";
-import { closeAlpacaUser, createAchRelationship, createAlpacaUser, deleteAchRelationship, getAchRelationships, reopenAlpacaUser, updateAlpacaUser } from "../alpaca_services/accounts_service";
+import { closeAlpacaUser, createAchRelationship, createAlpacaUser, deleteAchRelationship, getAchRelationships, createTransfer, reopenAlpacaUser, updateAlpacaUser, TransferData } from "../alpaca_services/accounts_service";
 const userRoutes = express.Router()
 
 export interface IRequestWithUser extends Request {
@@ -203,6 +203,31 @@ userRoutes.delete("/:account_number/ach/:ach_relationship_id", isUserLoggedIn, a
             throw new Error("alpaca error: ach relationships couldn't fetch")
 
         return res.status(204).json()
+    }
+    catch (err) {
+        console.log(err)
+        res.status(500).json({ msg: "Something went wrong", err })
+    }
+})
+
+userRoutes.post("/:account_number/ach/transfers", isUserLoggedIn, async (req: IRequestWithUser, res: Response) => {
+    try {
+        const account_number = req.params.account_number
+        const requester = req.user
+        if (!requester || (requester.account_number !== account_number && !requester.is_admin))
+            throw new Error("You are unauthorized for this action")
+
+        const foundUserId = await getUser(account_number, "alpaca_id")
+        if (!foundUserId) throw new Error("There is not a user with this account number")
+
+        const transferData: TransferData = req.body
+
+        const { status, data } = await createTransfer(foundUserId.alpaca_id, transferData)
+
+        if (status !== 200)
+            throw new Error("alpaca error: ach relationships couldn't fetch")
+
+        return res.status(200).json(data)
     }
     catch (err) {
         console.log(err)
