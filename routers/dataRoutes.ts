@@ -1,6 +1,6 @@
 import express from "express";
 import { Request, Response } from "express";
-import { getHistoricalBars } from "../alpaca_services/data_service";
+import { getHistoricalBars, getNews } from "../alpaca_services/data_service";
 
 const dataRoutes = express.Router()
 
@@ -14,6 +14,25 @@ dataRoutes.get("/:symbol_or_asset_id/bars", async (req: Request, res: Response) 
             throw new Error("You are unauthorized for this action")
 
         const { status, data } = await getHistoricalBars(symbol_or_asset_id, timeFrame)
+        if (status !== 200) throw new Error("Something went wrong on alpaca connection")
+
+        return res.json(data)
+    }
+    catch (err) {
+        console.log(err)
+        return res.status(500).json({ msg: err })
+    }
+})
+
+dataRoutes.get("/:symbol_or_asset_id/news", async (req: Request, res: Response) => {
+    try {
+        const symbol_or_asset_id = req.params.symbol_or_asset_id
+
+        const requester = req.user
+        if (!requester)
+            throw new Error("You are unauthorized for this action")
+
+        const { status, data } = await getNews(symbol_or_asset_id)
         if (status !== 200) throw new Error("Something went wrong on alpaca connection")
 
         return res.json(data)

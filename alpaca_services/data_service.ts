@@ -1,4 +1,5 @@
 const alpacaDataUrl = process.env.ALPACA_DATA_API_URL || "alpaca_data_api_url_not_found"
+const alpacaDataUrlV1 = process.env.ALPACA_DATA_API_URL_V1 || "alpaca_data_api_url_not_found"
 const alpacaKey = process.env.ALPACA_API_KEY || "alpaca_api_key_not_found"
 const alpacaSecret = process.env.ALPACA_API_SECRET || "alpaca_api_secret_not_found"
 
@@ -83,6 +84,24 @@ export const getHistoricalBars = async (
         limit: dataLimit.toString(),
         adjustment: "split",
         start: startDate.toISOString()
+    }), {
+        method: "GET",
+        headers: {
+            accept: "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        }
+    })
+
+    const alpacaData = await alpacaRes.json()
+    return { status: alpacaRes.status, data: alpacaData }
+}
+
+export const getNews = async (
+    symbol_or_asset_id: string,
+) => {
+    const alpacaRes = await fetch(`${alpacaDataUrlV1}/news?` + new URLSearchParams({
+        symbols: symbol_or_asset_id,
+        limit: "10",
     }), {
         method: "GET",
         headers: {
