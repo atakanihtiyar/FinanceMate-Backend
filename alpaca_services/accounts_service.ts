@@ -477,6 +477,12 @@ const extractTransfer = (transfer) => {
     }
 }
 
+const extractTransfers = (transfers) => {
+    return transfers.map((transfer) => {
+        return extractTransfer(transfer)
+    })
+}
+
 export const createTransfer = async (account_id: string, transferData: TransferData, opt?: Options) => {
     if (opt?.returnFake) {
         return {
@@ -513,5 +519,44 @@ export const createTransfer = async (account_id: string, transferData: TransferD
     })
     let alpacaData = await alpacaRes.json()
     if (alpacaRes.status === 200) return { status: 200, data: extractTransfer(alpacaData) }
+    else return alpacaData
+}
+
+export const getTransfers = async (account_id: string, opt?: Options) => {
+    if (opt?.returnFake) {
+        return {
+            status: 200,
+            data: extractTransfer([
+                {
+                    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "relationship_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "bank_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "account_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "type": "ach",
+                    "status": "QUEUED",
+                    "reason": "string",
+                    "amount": "string",
+                    "direction": "INCOMING",
+                    "created_at": "2024-07-04T09:25:37.991Z",
+                    "updated_at": "2024-07-04T09:25:37.991Z",
+                    "expires_at": "2024-07-04T09:25:37.991Z",
+                    "additional_information": "string",
+                    "hold_until": "2024-07-04T09:25:37.991Z",
+                    "instant_amount": "string"
+                }
+            ])
+        }
+    }
+
+    const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}/transfers`, {
+        method: "GET",
+        headers: {
+            accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
+        },
+    })
+    let alpacaData = await alpacaRes.json()
+    if (alpacaRes.status === 200) return { status: 200, data: extractTransfers(alpacaData) }
     else return alpacaData
 }
