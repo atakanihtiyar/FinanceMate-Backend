@@ -17,19 +17,21 @@ tradingRoutes.get("/:account_number/account", isUserLoggedIn, async (req: IReque
         const account_number = req.params.account_number
         const requester = req.user
         if (!requester || (requester.account_number !== account_number && !requester.is_admin))
-            throw new Error("You are unauthorized for this action")
+            return res.status(401).json({ msg: "You are unauthorized for this action" })
 
         const foundUser = await getUser(account_number)
-        if (!foundUser) throw new Error("User not found")
+        if (!foundUser)
+            return res.status(404).json({ msg: "There is not a user with this account number" })
+
         const { status, data } = await getTradingDetails(foundUser.alpaca_id)
-        if (status === 200)
-            return res.json(data)
-        else
-            throw new Error(data)
+        if (status !== 200)
+            return res.status(status).json({ msg: data.message })
+
+        return res.json(data)
     }
     catch (err) {
-        console.log(err)
-        return res.status(500).json({ msg: err })
+        console.log(err.message)
+        return res.status(500).json({ msg: err.message })
     }
 })
 
@@ -38,19 +40,21 @@ tradingRoutes.get("/:account_number/positions", isUserLoggedIn, async (req: IReq
         const account_number = req.params.account_number
         const requester = req.user
         if (!requester || (requester.account_number !== account_number && !requester.is_admin))
-            throw new Error("You are unauthorized for this action")
+            return res.status(401).json({ msg: "You are unauthorized for this action" })
 
         const foundUser = await getUser(account_number)
-        if (!foundUser) throw new Error("User not found")
+        if (!foundUser)
+            return res.status(404).json({ msg: "There is not a user with this account number" })
+
         const { status, data } = await getPositions(foundUser.alpaca_id)
-        if (status === 200)
-            return res.json(data)
-        else
-            throw new Error(data)
+        if (status !== 200)
+            return res.status(status).json({ msg: data.message })
+
+        return res.json(data)
     }
     catch (err) {
-        console.log(err)
-        return res.status(500).json({ msg: err })
+        console.log(err.message)
+        return res.status(500).json({ msg: err.message })
     }
 })
 
@@ -59,19 +63,21 @@ tradingRoutes.get("/:account_number/orders", isUserLoggedIn, async (req: IReques
         const account_number = req.params.account_number
         const requester = req.user
         if (!requester || (requester.account_number !== account_number && !requester.is_admin))
-            throw new Error("You are unauthorized for this action")
+            return res.status(401).json({ msg: "You are unauthorized for this action" })
 
         const foundUser = await getUser(account_number)
-        if (!foundUser) throw new Error("User not found")
+        if (!foundUser)
+            return res.status(404).json({ msg: "There is not a user with this account number" })
+
         const { status, data } = await getOrders(foundUser.alpaca_id)
-        if (status === 200)
-            return res.json(data)
-        else
-            throw new Error(data)
+        if (status !== 200)
+            return res.status(status).json({ msg: data.message })
+
+        return res.json(data)
     }
     catch (err) {
-        console.log(err)
-        return res.status(500).json({ msg: err })
+        console.log(err.message)
+        return res.status(500).json({ msg: err.message })
     }
 })
 
@@ -80,22 +86,22 @@ tradingRoutes.post("/:account_number/orders", isUserLoggedIn, async (req: IReque
         const account_number = req.params.account_number
         const requester = req.user
         if (!requester || (requester.account_number !== account_number && !requester.is_admin))
-            throw new Error("You are unauthorized for this action")
+            return res.status(401).json({ msg: "You are unauthorized for this action" })
 
         const foundUser = await getUser(account_number)
-        if (!foundUser) throw new Error("User not found")
+        if (!foundUser)
+            return res.status(404).json({ msg: "There is not a user with this account number" })
 
         const { symbol, qty, side, type, time_in_force, limit_price, stop_price } = req.body
         const { status, data } = await createOrder(foundUser.alpaca_id, { symbol, qty, side, type, time_in_force, limit_price, stop_price })
+        if (status !== 200)
+            return res.status(status).json({ msg: data.message })
 
-        if (status === 200)
-            return res.json(data)
-        else
-            throw new Error(data)
+        return res.json(data)
     }
     catch (err) {
-        console.log(err)
-        return res.status(500).json({ msg: err })
+        console.log(err.message)
+        return res.status(500).json({ msg: err.message })
     }
 })
 
@@ -104,16 +110,18 @@ tradingRoutes.get("/:account_number/portfolio_history", isUserLoggedIn, async (r
         const account_number = req.params.account_number
         const requester = req.user
         const timeframe = req.query.timeframe as "5Min" | "15Min" | "1H" | "1D"
-        if (!requester || (requester.account_number !== account_number && !requester.is_admin)) throw new Error("You are unauthorized for this action")
+        if (!requester || (requester.account_number !== account_number && !requester.is_admin))
+            return res.status(401).json({ msg: "You are unauthorized for this action" })
+
         const foundUserId = await getUser(account_number, "alpaca_id")
-        if (!foundUserId) throw new Error("There is not a user with this account number")
+        if (!foundUserId)
+            return res.status(404).json({ msg: "There is not a user with this account number" })
 
         const { status, data } = await getAccountPortfolioHistory(foundUserId.alpaca_id, timeframe)
+        if (status !== 200)
+            return res.status(status).json({ msg: data.message })
 
-        if (status === 200)
-            return res.json(data)
-        else
-            throw new Error(data)
+        return res.json(data)
     }
     catch (err) {
         console.log(err.message)

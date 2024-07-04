@@ -10,12 +10,14 @@ assetRoutes.get("/:symbol_or_asset_id", async (req: Request, res: Response) => {
         const symbol_or_asset_id = req.params.symbol_or_asset_id
         const requester = req.user
         if (!requester)
-            throw new Error("You are unauthorized for this action")
+            return res.status(401).json({ msg: "You are unauthorized for this action" })
 
         const results = await Promise.all([getAssetData(symbol_or_asset_id), getLatestBar(symbol_or_asset_id)])
         if (!results) throw new Error("Something went wrong on alpaca connection")
-        if (results[0]?.status !== 200) throw new Error("Something went wrong on fetching asset data")
-        if (results[1]?.status !== 200) throw new Error("Something went wrong on fetching asset price")
+        if (results[0] && results[0].status !== 200)
+            return res.status(results[0].status).json({ msg: results[0].data.message })
+        if (results[1] && results[1].status !== 200)
+            return res.status(results[1].status).json({ msg: results[1].data.message })
 
         return res.json({
             ...results[0].data,
@@ -23,8 +25,8 @@ assetRoutes.get("/:symbol_or_asset_id", async (req: Request, res: Response) => {
         })
     }
     catch (err) {
-        console.log(err)
-        return res.status(500).json({ msg: err })
+        console.log(err.message)
+        return res.status(500).json({ msg: err.message })
     }
 })
 
