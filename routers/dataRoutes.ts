@@ -11,16 +11,17 @@ dataRoutes.get("/:symbol_or_asset_id/bars", async (req: Request, res: Response) 
 
         const requester = req.user
         if (!requester)
-            throw new Error("You are unauthorized for this action")
+            return res.status(401).json({ msg: "You are unauthorized for this action" })
 
         const { status, data } = await getHistoricalBars(symbol_or_asset_id, timeFrame)
-        if (status !== 200) throw new Error("Something went wrong on alpaca connection")
+        if (status !== 200)
+            return res.status(status).json({ msg: data.message })
 
         return res.json(data)
     }
     catch (err) {
-        console.log(err)
-        return res.status(500).json({ msg: err })
+        console.log(err.message)
+        return res.status(500).json({ msg: err.message })
     }
 })
 
@@ -30,16 +31,17 @@ dataRoutes.get("/:symbol_or_asset_id/news", async (req: Request, res: Response) 
 
         const requester = req.user
         if (!requester)
-            throw new Error("You are unauthorized for this action")
+            return res.status(401).json({ msg: "You are unauthorized for this action" })
 
         const { status, data } = await getNews(symbol_or_asset_id)
-        if (status !== 200) throw new Error("Something went wrong on alpaca connection")
+        if (status !== 200)
+            return res.status(status).json({ msg: data.message })
 
         return res.json(data)
     }
     catch (err) {
-        console.log(err)
-        return res.status(500).json({ msg: err })
+        console.log(err.msg)
+        return res.status(500).json({ msg: err.msg })
     }
 })
 

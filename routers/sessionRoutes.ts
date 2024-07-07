@@ -23,17 +23,17 @@ sessionRoutes.get("/check", (req: IRequestWithUser, res: Response) => {
 
 sessionRoutes.post("/logout", (req, res) => {
     req.logout(function (err) {
-        if (err) { return res.json({ result: false, message: err.message }) }
-        return res.status(201).json({ result: true, message: "successfully logout" })
+        if (err) { return res.json({ result: false, msg: err.message }) }
+        return res.status(201).json({ result: true, msg: "successfully logout" })
     });
 })
 
 sessionRoutes.post("/login", (req, res) => {
     passport.authenticate('local', (err, user, info, status) => {
-        if (err) return res.status(500).json({ result: false, user: null, message: info.message })
-        if (!user) return res.status(401).json({ result: false, user: null, message: info.message })
+        if (err) return res.status(500).json({ result: false, user: null, msg: info.message })
+        if (!user) return res.status(401).json({ result: false, user: null, msg: info.message })
         req.logIn(user, (err) => {
-            if (err) return res.status(401).json({ result: false, user: null, message: info.message })
+            if (err) return res.status(401).json({ result: false, user: null, msg: info.message })
             return res.status(201).json({ result: true, user: { account_number: user.account_number, given_name: user.given_name, family_name: user.family_name } })
         })
     })(req, res)

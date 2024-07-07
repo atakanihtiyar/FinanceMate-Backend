@@ -315,7 +315,7 @@ export const updateAlpacaUser = async (userData: UserData, userOnDb, opt?: Optio
 }
 
 export const closeAlpacaUser = async (account_id: string, opt?: Options) => {
-    if (opt?.returnFake) return true
+    if (opt?.returnFake) return { status: 204 }
 
     const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}/actions/close`, {
         method: "POST",
@@ -323,12 +323,11 @@ export const closeAlpacaUser = async (account_id: string, opt?: Options) => {
             Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
         }
     })
-    if (alpacaRes.status === 204) return true
-    else return false
+    return { status: alpacaRes.status }
 }
 
 export const reopenAlpacaUser = async (account_id: string, opt?: Options) => {
-    if (opt?.returnFake) return true
+    if (opt?.returnFake) return { status: 200 }
 
     const alpacaRes = await fetch(`${alpacaUrl}/accounts/${account_id}/actions/reopen`, {
         method: "POST",
@@ -338,8 +337,7 @@ export const reopenAlpacaUser = async (account_id: string, opt?: Options) => {
             Authorization: "Basic " + Buffer.from(alpacaKey + ":" + alpacaSecret).toString("base64")
         }
     })
-    if (alpacaRes.status === 200) return true
-    else return false
+    return { status: alpacaRes.status }
 }
 
 interface AchData {
